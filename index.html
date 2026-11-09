@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101114">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Ваша ежедневная сводка: пять главных сюжетов, контекст и значение. Доступна офлайн.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Daily Brief">
+  <title>Daily Interest Brief</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./feed.js" defer></script>
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#news">К новостям</a>
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="brand" href="./" aria-label="Daily Interest Brief — главная">
+        <span class="brand-mark" aria-hidden="true">di<span>.</span></span>
+        <span class="brand-name">DAILY INTEREST<span>BRIEF</span></span>
+      </a>
+      <button class="refresh-button" id="refresh" type="button" aria-label="Refresh — обновить сводку">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.2 7a7.5 7.5 0 0 1 12.4-1L20 8M4 16l1.4 2A7.5 7.5 0 0 0 17.8 17"/></svg>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="edition-line"><span class="eyebrow">ВАШ ЕЖЕДНЕВНЫЙ ОБЗОР</span><time id="edition-date"></time></div>
+      <h1 id="page-title">Большая картина.<br><span>Пять главных сюжетов.</span></h1>
+      <p class="intro-copy" id="headline">Рынки, технологии и мир — в одном коротком выпуске.</p>
+      <div class="brief-meta"><span><strong id="total-count">5</strong> новостей</span><span>~ 4 минуты</span><span>7 тем</span></div>
+    </section>
+
+    <div class="demo-note" id="demo-note" hidden><span class="demo-label">DEMO</span><p>Демонстрационный выпуск. Все сюжеты вымышлены.</p></div>
+
+    <section class="feed-section" aria-label="Новостная сводка">
+      <div class="feed-toolbar">
+        <h2>В фокусе <span class="count-badge" id="visible-count">—</span></h2>
+        <span class="connection" id="connection"><span class="status-dot" aria-hidden="true"></span><span id="connection-text">Загрузка</span></span>
+      </div>
+      <nav class="filters" aria-label="Категории новостей" id="filters"></nav>
+      <div class="update-line"><p id="feed-status" role="status" aria-live="polite">Загружаем свежую сводку…</p><span id="edition-time"></span></div>
+      <div id="news" class="news-grid" tabindex="-1" aria-busy="true"></div>
+      <div class="empty-state" id="empty-state" hidden><span aria-hidden="true">↗</span><h3>В этой теме пока тихо</h3><p>В текущем выпуске нет новостей этой категории.</p><button id="show-all" class="text-button" type="button">Показать все новости →</button></div>
+      <div class="error-state" id="error-state" hidden><h3>Не удалось загрузить выпуск</h3><p id="error-description">Проверьте подключение и нажмите Refresh.</p><button id="retry" class="primary-button" type="button">Попробовать снова</button></div>
+    </section>
+
+    <aside class="install-strip" aria-label="Установка на iPhone">
+      <span class="install-icon" aria-hidden="true">di<span>.</span></span>
+      <div><h2>Ваш brief. На главном экране.</h2><p>Открывайте в одно касание, читайте офлайн.</p></div>
+      <button id="install-help" class="install-button" type="button" aria-haspopup="dialog">Как добавить <span aria-hidden="true">↗</span></button>
+    </aside>
+    <p id="offline-status" class="offline-note" role="status">Офлайн-копия готовится после первого открытия.</p>
+    <footer><span>DAILY INTEREST BRIEF</span><span>Меньше шума. Больше контекста.</span></footer>
+  </main>
+
+  <dialog id="install-dialog" aria-labelledby="install-title">
+    <div class="dialog-heading"><span class="eyebrow">IPHONE · SAFARI</span><button class="close-button" id="close-dialog" type="button" aria-label="Закрыть">×</button></div>
+    <h2 id="install-title">Сводка в одно касание.</h2>
+    <ol><li>Откройте опубликованный сайт в <strong>Safari</strong>.</li><li>Нажмите <strong>«Поделиться»</strong> — значок квадрата со стрелкой вверх.</li><li>Выберите <strong>«На экран “Домой”»</strong> (Add to Home Screen). Если доступен переключатель «Открывать как веб-приложение», включите его. Нажмите <strong>«Добавить»</strong>.</li></ol>
+    <p>После первой загрузки сводка доступна офлайн. Для установки с другого устройства опубликуйте сайт по HTTPS.</p>
+    <button id="close-dialog-done" class="primary-button" type="button">Понятно</button>
+  </dialog>
+  <noscript><div class="noscript">Для чтения сводки включите JavaScript в Safari.</div></noscript>
+</body>
+</html>
