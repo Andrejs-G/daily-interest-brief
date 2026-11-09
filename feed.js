@@ -1,7 +1,7 @@
 /* Shared schema validation for the page and service worker. No dependencies. */
 (function (root) {
   'use strict';
-  const categories = Object.freeze(['Macro', 'Pure Alpha', 'Geopolitics', 'Shipping', 'EV/Porsche', 'AI', 'NHL']);
+  const categories = Object.freeze(['Macro', 'Pure Alpha', 'Geopolitics', 'Shipping', 'EV/Porsche', 'AI', 'NHL', 'Latvia']);
   const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
   function string(value, max = 3000) {
     return typeof value === 'string' && value.trim().length > 0 && value.length <= max;
@@ -14,7 +14,7 @@
     if (new Date(updatedDay + 'T00:00:00Z').toISOString().slice(0, 10) !== updatedDay) throw new Error('Неверная календарная дата обновления.');
     if (data.headline !== undefined && !string(data.headline, 500)) throw new Error('Неверный анонс выпуска.');
     if (data.fullText !== undefined && !string(data.fullText, 100000)) throw new Error('Неверный полный текст выпуска.');
-    if (!Array.isArray(data.items) || data.items.length !== 5) throw new Error('В выпуске должно быть ровно пять новостей.');
+    if (!Array.isArray(data.items) || data.items.length < 1) throw new Error('В выпуске должна быть хотя бы одна новость.');
     const ids = new Set();
     for (const item of data.items) {
       if (!object(item) || !string(item.id, 100) || ids.has(item.id)) throw new Error('Идентификаторы новостей должны быть уникальными.');

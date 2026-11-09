@@ -7,7 +7,7 @@
 
 importScripts('./feed.js');
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v5';
 const SCOPE = self.registration.scope;
 const CACHE_PREFIX = 'daily-interest-brief:' + encodeURIComponent(SCOPE) + ':';
 const SHELL_PREFIX = CACHE_PREFIX + 'shell:';
@@ -22,6 +22,7 @@ const SHELL_URLS = [
   'styles.css',
   'app.js',
   'renderer.js',
+  'edition.js',
   'feed.js',
   'manifest.json',
   'icons/icon-192.png',

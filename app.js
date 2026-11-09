@@ -3,6 +3,7 @@
   'use strict';
   const $ = id => document.getElementById(id);
   const { categories, validateBrief } = globalThis.BriefFeed;
+  const categoryLabel = category => category === 'Latvia' ? 'Латвия' : category;
   const baseURL = new URL('./', document.baseURI);
   const storageKey = 'daily-interest-brief:validated:v1:' + baseURL.href;
   let currentBrief = null;
@@ -10,7 +11,8 @@
   let loading = false;
   let sourceMode = 'loading';
   let lastAttemptAt = 0;
-  let renderedFullText = null;
+  let renderedEditionKey = null;
+  let editionParts = null;
   const MIN_AUTO_REFRESH_MS = 60000;
   const VISIBLE_REFRESH_MS = 5 * 60000;
 
@@ -35,19 +37,73 @@
   }
   function buildFilters() {
     for (const category of ['Все', ...categories]) {
-      const button = element('button', 'filter', category);
+      const button = element('button', 'filter', categoryLabel(category));
       button.type = 'button';
+      button.dataset.category = category;
       button.setAttribute('aria-pressed', String(category === activeCategory));
       button.addEventListener('click', () => {
         activeCategory = category;
         updateFilters();
-        renderCards();
+        renderEdition();
       });
       $('filters').append(button);
     }
   }
   function updateFilters() {
-    for (const button of $('filters').children) button.setAttribute('aria-pressed', String(button.textContent === activeCategory));
+    for (const button of $('filters').children) button.setAttribute('aria-pressed', String(button.dataset.category === activeCategory));
+  }
+  function renderEdition() {
+    if (!currentBrief) return;
+    const fullText = typeof currentBrief.fullText === 'string' ? currentBrief.fullText : '';
+    if (!fullText) {
+      renderedEditionKey = null;
+      $('news').className = 'news-grid';
+      $('filters').hidden = false;
+      $('conclusion-shortcut').hidden = true;
+      renderCards();
+      return;
+    }
+    // Keep the full original paragraphs and tables; short excerpts are only a fallback.
+    const key = JSON.stringify([fullText, currentBrief.items.map(item => [item.id, item.categories])]);
+    if (key !== renderedEditionKey) {
+      editionParts = globalThis.BriefEdition.split(fullText, currentBrief.items.length);
+      $('news').replaceChildren();
+      $('news').className = 'edition-reader';
+      const appendSection = (tag, className, text, id) => {
+        const section = element(tag, className);
+        if (id) section.id = id;
+        section.append(globalThis.BriefMarkdown.render(text));
+        $('news').append(section);
+        return section;
+      };
+      if (editionParts) {
+        if (editionParts.intro.trim()) appendSection('div', 'edition-intro brief-content', editionParts.intro);
+        editionParts.stories.forEach((text, index) => {
+          const article = appendSection('article', 'news-card full-story brief-content', text, 'story-' + (index + 1));
+          article.dataset.storyIndex = String(index);
+        });
+        if (editionParts.conclusion.trim()) appendSection('section', 'edition-conclusion brief-content', editionParts.conclusion, 'edition-conclusion');
+      } else {
+        // Future editions with different headings must remain readable in their entirety.
+        appendSection('article', 'edition-complete brief-content', fullText);
+      }
+      renderedEditionKey = key;
+    }
+    $('filters').hidden = !editionParts;
+    $('conclusion-shortcut').hidden = !editionParts?.conclusion.trim();
+    if (!editionParts) {
+      $('visible-count').textContent = String(currentBrief.items.length).padStart(2, '0');
+      $('empty-state').hidden = true;
+      return;
+    }
+    const selected = currentBrief.items.map(item => activeCategory === 'Все' || item.categories.includes(activeCategory));
+    for (const child of $('news').children) {
+      if (child.dataset.storyIndex !== undefined) child.hidden = !selected[Number(child.dataset.storyIndex)];
+      else child.hidden = activeCategory !== 'Все' && child.id !== 'edition-conclusion';
+    }
+    // Keep the original end-of-edition conclusions available with every category.
+    $('visible-count').textContent = String(selected.filter(Boolean).length).padStart(2, '0');
+    $('empty-state').hidden = selected.some(Boolean) || (activeCategory === 'Pure Alpha' && Boolean(editionParts.conclusion.trim()));
   }
   function renderCards() {
     $('news').replaceChildren();
@@ -59,8 +115,8 @@
       const article = element('article', 'news-card');
       const top = element('div', 'card-top');
       const tags = element('div', 'category-tags');
-      item.categories.forEach(category => tags.append(element('span', 'category-tag', category)));
-      top.append(tags, element('span', 'story-number', String(currentBrief.items.indexOf(item) + 1).padStart(2, '0') + ' / 05'));
+      item.categories.forEach(category => tags.append(element('span', 'category-tag', categoryLabel(category))));
+      top.append(tags, element('span', 'story-number', String(currentBrief.items.indexOf(item) + 1).padStart(2, '0') + ' / ' + String(currentBrief.items.length).padStart(2, '0')));
       const title = element('h3', '', item.title);
       const impact = element('div', 'impact');
       impact.append(element('span', 'impact-label', 'ПОЧЕМУ ЭТО ВАЖНО'), element('p', '', item.impact));
@@ -93,16 +149,8 @@
       $('stale-note').textContent = 'Показан выпуск от ' + editionDate + ' Более свежий выпуск пока не получен.';
     }
   }
-  function renderFullEdition(data) {
-    const text = typeof data.fullText === 'string' ? data.fullText : '';
-    $('full-edition').hidden = !text;
-    if (text !== renderedFullText) {
-      const content = $('full-edition-content');
-      content.replaceChildren();
-      if (text) content.append(globalThis.BriefMarkdown.render(text));
-      renderedFullText = text;
-    }
-    const readingText = text || data.items.map(item => item.title + ' ' + item.summary + ' ' + item.impact).join(' ');
+  function updateReadingTime(data) {
+    const readingText = data.fullText || data.items.map(item => item.title + ' ' + item.summary + ' ' + item.impact).join(' ');
     const words = readingText.trim().split(/\s+/).filter(Boolean).length;
     $('reading-time').textContent = '~ ' + Math.max(1, Math.ceil(words / 180)) + ' мин чтения';
   }
@@ -114,11 +162,15 @@
     $('edition-date').dateTime = data.date;
     $('edition-time').textContent = new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Riga' }).format(new Date(data.updatedAt)) + ' · Рига';
     $('edition-time').title = 'Время обновления выпуска: ' + data.updatedAt;
-    $('headline').textContent = data.headline || 'Рынки, технологии и мир — в одном коротком выпуске.';
+    $('headline').textContent = data.headline || 'Новости, анализ, выводы и ориентиры на день.';
+    $('headline').hidden = Boolean(data.fullText);
     $('total-count').textContent = String(data.items.length);
+    $('topic-count').textContent = String(categories.length);
+    const count = data.items.length;
+    $('news-word').textContent = count % 10 === 1 && count % 100 !== 11 ? 'новость' : count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 12 || count % 100 > 14) ? 'новости' : 'новостей';
     $('error-state').hidden = true;
-    renderCards();
-    renderFullEdition(data);
+    renderEdition();
+    updateReadingTime(data);
     updateStaleNote();
   }
   async function refresh() {
@@ -217,7 +269,7 @@
   if (saved) showBrief(saved);
   $('refresh').addEventListener('click', refresh);
   $('retry').addEventListener('click', refresh);
-  $('show-all').addEventListener('click', () => { activeCategory = 'Все'; updateFilters(); renderCards(); $('filters').firstElementChild.focus(); });
+  $('show-all').addEventListener('click', () => { activeCategory = 'Все'; updateFilters(); renderEdition(); $('filters').firstElementChild.focus(); });
   $('install-help').addEventListener('click', () => $('install-dialog').showModal());
   $('close-dialog').addEventListener('click', () => $('install-dialog').close());
   $('close-dialog-done').addEventListener('click', () => $('install-dialog').close());

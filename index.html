@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#101114">
   <meta name="color-scheme" content="dark">
-  <meta name="description" content="Ваша ежедневная сводка: пять главных сюжетов, контекст и значение. Доступна офлайн.">
+  <meta name="description" content="Ваша ежедневная сводка: полный текст новостей, выводы Pure Alpha и что отслеживать. Доступна офлайн.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Daily Brief">
@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="./styles.css">
   <script src="./feed.js" defer></script>
   <script src="./renderer.js" defer></script>
+  <script src="./edition.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -36,30 +37,26 @@
   <main class="page">
     <section class="intro" aria-labelledby="page-title">
       <div class="edition-line"><span class="eyebrow">ВАШ ЕЖЕДНЕВНЫЙ ОБЗОР</span><time id="edition-date"></time></div>
-      <h1 id="page-title">Большая картина.<br><span>Пять главных сюжетов.</span></h1>
-      <p class="intro-copy" id="headline">Рынки, технологии и мир — в одном коротком выпуске.</p>
-      <div class="brief-meta"><span><strong id="total-count">5</strong> новостей</span><span id="reading-time">~ 4 мин чтения</span><span>7 тем</span></div>
+      <h1 id="page-title">Daily Interest <span>Brief.</span></h1>
+      <p class="intro-copy" id="headline">Новости, анализ, выводы и ориентиры на день.</p>
+      <div class="brief-meta"><span><strong id="total-count">—</strong> <span id="news-word">новостей</span></span><span id="reading-time">~ 4 мин чтения</span><span><span id="topic-count">8</span> тем</span></div>
     </section>
 
     <div class="demo-note" id="demo-note" hidden><span class="demo-label">DEMO</span><p>Демонстрационный выпуск. Все сюжеты вымышлены.</p></div>
 
     <section class="feed-section" aria-label="Новостная сводка">
       <div class="feed-toolbar">
-        <h2>В фокусе <span class="count-badge" id="visible-count">—</span></h2>
+        <h2>Полный выпуск <span class="count-badge" id="visible-count">—</span></h2>
         <span class="connection" id="connection"><span class="status-dot" aria-hidden="true"></span><span id="connection-text">Загрузка</span></span>
       </div>
+      <a class="conclusion-shortcut" id="conclusion-shortcut" href="#edition-conclusion" hidden>К выводам Pure Alpha <span aria-hidden="true">↓</span></a>
       <nav class="filters" aria-label="Категории новостей" id="filters"></nav>
       <div class="update-line"><p id="feed-status" role="status" aria-live="polite">Загружаем свежую сводку…</p><span id="edition-time"></span></div>
       <p id="stale-note" class="stale-note" role="status" hidden></p>
-      <div id="news" class="news-grid" tabindex="-1" aria-busy="true"></div>
       <div class="empty-state" id="empty-state" hidden><span aria-hidden="true">↗</span><h3>В этой теме пока тихо</h3><p>В текущем выпуске нет новостей этой категории.</p><button id="show-all" class="text-button" type="button">Показать все новости →</button></div>
+      <div id="news" class="news-grid" tabindex="-1" aria-busy="true"></div>
       <div class="error-state" id="error-state" hidden><h3>Не удалось загрузить выпуск</h3><p id="error-description">Проверьте подключение и нажмите Refresh.</p><button id="retry" class="primary-button" type="button">Попробовать снова</button></div>
     </section>
-
-    <details class="full-edition" id="full-edition" hidden>
-      <summary><span>Полный выпуск</span><span class="full-edition-hint">Daily Interest Brief</span></summary>
-      <div class="brief-content" id="full-edition-content"></div>
-    </details>
 
     <aside class="install-strip" aria-label="Установка на iPhone">
       <span class="install-icon" aria-hidden="true">di<span>.</span></span>
