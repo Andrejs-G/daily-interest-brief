@@ -9,6 +9,10 @@
   let activeCategory = 'Все';
   let loading = false;
   let sourceMode = 'loading';
+  let lastAttemptAt = 0;
+  let renderedFullText = null;
+  const MIN_AUTO_REFRESH_MS = 60000;
+  const VISIBLE_REFRESH_MS = 5 * 60000;
 
   function element(tag, className, text) {
     const node = document.createElement(tag);
@@ -77,6 +81,31 @@
       $('news').append(article);
     }
   }
+  function updateStaleNote() {
+    if (!currentBrief) { $('stale-note').hidden = true; return; }
+    const parts = new Intl.DateTimeFormat('en', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Europe/Riga' }).formatToParts(new Date());
+    const value = type => parts.find(part => part.type === type).value;
+    const today = value('year') + '-' + value('month') + '-' + value('day');
+    const stale = currentBrief.date < today;
+    $('stale-note').hidden = !stale;
+    if (stale) {
+      const editionDate = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(currentBrief.date + 'T12:00:00Z'));
+      $('stale-note').textContent = 'Показан выпуск от ' + editionDate + ' Более свежий выпуск пока не получен.';
+    }
+  }
+  function renderFullEdition(data) {
+    const text = typeof data.fullText === 'string' ? data.fullText : '';
+    $('full-edition').hidden = !text;
+    if (text !== renderedFullText) {
+      const content = $('full-edition-content');
+      content.replaceChildren();
+      if (text) content.append(globalThis.BriefMarkdown.render(text));
+      renderedFullText = text;
+    }
+    const readingText = text || data.items.map(item => item.title + ' ' + item.summary + ' ' + item.impact).join(' ');
+    const words = readingText.trim().split(/\s+/).filter(Boolean).length;
+    $('reading-time').textContent = '~ ' + Math.max(1, Math.ceil(words / 180)) + ' мин чтения';
+  }
   function showBrief(data) {
     currentBrief = data;
     $('demo-note').hidden = !data.demo;
@@ -89,9 +118,12 @@
     $('total-count').textContent = String(data.items.length);
     $('error-state').hidden = true;
     renderCards();
+    renderFullEdition(data);
+    updateStaleNote();
   }
   async function refresh() {
     if (loading) return;
+    lastAttemptAt = Date.now();
     loading = true;
     $('refresh').disabled = true;
     $('retry').disabled = true;
@@ -108,7 +140,7 @@
       saveBrief(data);
       const cached = response.headers.get('X-Brief-Cache') === 'offline';
       setConnection(cached ? 'cached' : 'network');
-      $('feed-status').textContent = cached ? 'Сохранённый выпуск · обновление пока недоступно.' : 'Выпуск загружен · последние доступные данные.';
+      $('feed-status').textContent = cached ? 'Сохранённый выпуск · обновление пока недоступно.' : 'Выпуск Daily Interest Brief загружен.';
     } catch (error) {
       const saved = currentBrief || readSaved();
       if (saved) {
@@ -131,6 +163,11 @@
       $('retry').disabled = false;
       $('news').setAttribute('aria-busy', 'false');
     }
+  }
+  function autoRefresh() {
+    updateStaleNote();
+    if (document.visibilityState !== 'visible' || loading || Date.now() - lastAttemptAt < MIN_AUTO_REFRESH_MS) return;
+    refresh();
   }
   async function setupOffline() {
     if (!('serviceWorker' in navigator) || !window.isSecureContext) {
@@ -185,7 +222,10 @@
   $('close-dialog').addEventListener('click', () => $('install-dialog').close());
   $('close-dialog-done').addEventListener('click', () => $('install-dialog').close());
   $('install-dialog').addEventListener('click', event => { if (event.target === $('install-dialog')) { const r = event.target.getBoundingClientRect(); if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) event.target.close(); } });
-  window.addEventListener('online', refresh);
+  window.addEventListener('online', autoRefresh);
+  window.addEventListener('pageshow', autoRefresh);
+  document.addEventListener('visibilitychange', autoRefresh);
+  setInterval(autoRefresh, VISIBLE_REFRESH_MS);
   window.addEventListener('offline', () => { if (currentBrief && sourceMode !== 'loading') { setConnection('cached'); $('feed-status').textContent = 'Нет сети · открыт последний загруженный выпуск.'; } });
   // First fetch and worker install can proceed independently.
   refresh();

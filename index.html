@@ -15,6 +15,7 @@
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <link rel="stylesheet" href="./styles.css">
   <script src="./feed.js" defer></script>
+  <script src="./renderer.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
@@ -37,7 +38,7 @@
       <div class="edition-line"><span class="eyebrow">ВАШ ЕЖЕДНЕВНЫЙ ОБЗОР</span><time id="edition-date"></time></div>
       <h1 id="page-title">Большая картина.<br><span>Пять главных сюжетов.</span></h1>
       <p class="intro-copy" id="headline">Рынки, технологии и мир — в одном коротком выпуске.</p>
-      <div class="brief-meta"><span><strong id="total-count">5</strong> новостей</span><span>~ 4 минуты</span><span>7 тем</span></div>
+      <div class="brief-meta"><span><strong id="total-count">5</strong> новостей</span><span id="reading-time">~ 4 мин чтения</span><span>7 тем</span></div>
     </section>
 
     <div class="demo-note" id="demo-note" hidden><span class="demo-label">DEMO</span><p>Демонстрационный выпуск. Все сюжеты вымышлены.</p></div>
@@ -49,10 +50,16 @@
       </div>
       <nav class="filters" aria-label="Категории новостей" id="filters"></nav>
       <div class="update-line"><p id="feed-status" role="status" aria-live="polite">Загружаем свежую сводку…</p><span id="edition-time"></span></div>
+      <p id="stale-note" class="stale-note" role="status" hidden></p>
       <div id="news" class="news-grid" tabindex="-1" aria-busy="true"></div>
       <div class="empty-state" id="empty-state" hidden><span aria-hidden="true">↗</span><h3>В этой теме пока тихо</h3><p>В текущем выпуске нет новостей этой категории.</p><button id="show-all" class="text-button" type="button">Показать все новости →</button></div>
       <div class="error-state" id="error-state" hidden><h3>Не удалось загрузить выпуск</h3><p id="error-description">Проверьте подключение и нажмите Refresh.</p><button id="retry" class="primary-button" type="button">Попробовать снова</button></div>
     </section>
+
+    <details class="full-edition" id="full-edition" hidden>
+      <summary><span>Полный выпуск</span><span class="full-edition-hint">Daily Interest Brief</span></summary>
+      <div class="brief-content" id="full-edition-content"></div>
+    </details>
 
     <aside class="install-strip" aria-label="Установка на iPhone">
       <span class="install-icon" aria-hidden="true">di<span>.</span></span>

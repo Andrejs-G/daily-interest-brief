@@ -13,6 +13,7 @@
     const updatedDay = data.updatedAt.slice(0, 10);
     if (new Date(updatedDay + 'T00:00:00Z').toISOString().slice(0, 10) !== updatedDay) throw new Error('Неверная календарная дата обновления.');
     if (data.headline !== undefined && !string(data.headline, 500)) throw new Error('Неверный анонс выпуска.');
+    if (data.fullText !== undefined && !string(data.fullText, 100000)) throw new Error('Неверный полный текст выпуска.');
     if (!Array.isArray(data.items) || data.items.length !== 5) throw new Error('В выпуске должно быть ровно пять новостей.');
     const ids = new Set();
     for (const item of data.items) {
